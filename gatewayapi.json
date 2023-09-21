@@ -1,0 +1,82 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "SBN Survey Image Service API",
+        "version": "0.1.0",
+        "description": "Fetch cutouts of SBN survey data holdings."
+    },
+    "paths": {
+        "/cutout": {
+            "get": {
+                "summary": "Get cutout data.",
+                "description": "Cutout data from an image around the given location and size.",
+                "produces": [
+                    "image/fits",
+                    "image/png",
+                    "image/jpeg"
+                ],
+                "parameters": [
+                    {
+                        "name": "lid",
+                        "in": "query",
+                        "description": "PDS4 logical identifier.",
+                        "example": "urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated:g96_20210402_2b_f5q9m2_01_0001.arch",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ra",
+                        "in": "query",
+                        "description": "Right ascension of the cutout center, in units of hour angle.",
+                        "example": "12:43:58",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dec",
+                        "in": "query",
+                        "description": "Declination of the cutout center, in units of degree.",
+                        "example": "23:55:23",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "Full linear size of the cutout, with units specified as, e.g., arcsec, arcmin, deg.",
+                        "example": "5 arcmin",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "format",
+                        "in": "query",
+                        "description": "Returned image format.",
+                        "example": "fits",
+                        "required": false,
+                        "type": "string",
+                        "enum": [
+                            "fits",
+                            "jpeg",
+                            "png"
+                        ]
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": " Cutout data.",
+                        "schema": {
+                            "$ref": "#/definitions/ImageResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "ImageResponse": {
+            "type": "string",
+            "format": "binary"
+        }
+    }
+}
