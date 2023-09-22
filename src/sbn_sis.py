@@ -1,14 +1,18 @@
 import io
 import warnings
+from enum import Enum
+from typing import Dict
 import requests
+from PIL import Image
 import numpy as np
+import astropy.units as u
 from astropy.io import fits
 from astropy.nddata import Cutout2D
 from astropy.coordinates import SkyCoord
 from astropy.wcs import WCS, FITSFixedWarning
-import astropy.units as u
+from astropy.visualization import ZScaleInterval
 
-mm_to_Mon = {
+mm_to_Mon: Dict[str, str] = {
     "01": "Jan",
     "02": "Feb",
     "03": "Mar",
@@ -22,6 +26,12 @@ mm_to_Mon = {
     "11": "Nov",
     "12": "Dec",
 }
+
+
+class ImageFormat(Enum):
+    FITS: str = "fits"
+    JPEG: str = "jpeg"
+    PNG: str = "png"
 
 
 def cutout_handler(lid: str, ra: str, dec: str, size: str) -> fits.HDUList:
@@ -202,3 +212,10 @@ def neat_tricam_lid_to_url(lid: str) -> str:
     directory = directory.replace("_", "/")
 
     return f"{base_url}/{directory}/{basename}.fit.fz"
+
+
+def fits_to_image(hdu: fits.HDUList) -> Image:
+    """Convert FITS data to PIL Image."""
+    interval: ZScaleInterval = ZScaleInterval()
+    scaled_data: np.ndarray = interval(hdu[0].data, clip=True) * 255
+    return Image.fromarray(scaled_data.astype(np.uint8))
