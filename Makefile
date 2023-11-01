@@ -6,11 +6,11 @@ default: sbn-sis.zip
 
 src/python:
 	python3.11 -m venv --prompt=sbn-sis-lambda src/python
-	source src/python/bin/activate && pip install astropy requests
+	. src/python/bin/activate && pip install astropy requests Pillow
 
 sbn-sis-dependencies.zip: src/python
 	rm -f $@
-	cd src && zip -r ../$@ python/lib/python3.11/site-packages
+	cd src && zip -r ../$@ python/lib/python3.11/site-packages --exclude python/lib/python3.11/site-packages/pip\* --exclude python/lib/python3.11/site-packages/setuptools\*
 
 sbn-sis.zip: $(SOURCE_FILES)
 	rm -f $@
@@ -22,4 +22,5 @@ deploy: sbn-sis.zip
 		--zip-file fileb://sbn-sis.zip
 
 clean:
+	cd src && rm -rf python
 	rm -f sbn-sis.zip sbn-sis-dependencies.zip
