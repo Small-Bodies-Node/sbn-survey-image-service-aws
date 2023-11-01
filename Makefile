@@ -16,10 +16,10 @@ sbn-sis.zip: $(SOURCE_FILES)
 	rm -f $@
 	cd src && zip ../$@ $(patsubst src/%,%,$^)
 
-# deploy: sbn-sis.zip
-# 	aws lambda update-function-code \
-# 		--function-name  sbn-sis \
-# 		--zip-file fileb://sbn-sis.zip
+deploy: sbn-sis.zip
+	aws lambda update-function-code \
+		--function-name  sbn-survey-image-service \
+		--zip-file fileb://sbn-sis.zip
 
 clean:
 	rm -f sbn-sis.zip sbn-sis-dependencies.zip
