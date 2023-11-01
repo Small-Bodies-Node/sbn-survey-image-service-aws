@@ -21,8 +21,13 @@ test:
 
 deploy: sbn-sis.zip
 	aws lambda update-function-code \
-		--function-name  sbn-survey-image-service \
+		--function-name sbn-survey-image-service \
 		--zip-file fileb://sbn-sis.zip
+
+deploy-dependencies: sbn-sis-dependencies.zip
+	aws lambda publish-layer-version \
+		--layer-name sbn-survey-image-service-dependencies \
+		--zip-file fileb://sbn-sis-dependencies.zip
 
 clean:
 	cd src && rm -rf python
