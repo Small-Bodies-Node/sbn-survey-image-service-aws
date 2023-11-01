@@ -1,7 +1,7 @@
 
 SOURCE_FILES := src/lambda_function.py src/sbn_sis.py
 
-.PHONY: deploy clean
+.PHONY: test deploy clean
 default: sbn-sis.zip
 
 src/python:
@@ -15,6 +15,9 @@ sbn-sis-dependencies.zip: src/python
 sbn-sis.zip: $(SOURCE_FILES)
 	rm -f $@
 	cd src && zip ../$@ $(patsubst src/%,%,$^)
+
+test:
+	pytest src/
 
 deploy: sbn-sis.zip
 	aws lambda update-function-code \

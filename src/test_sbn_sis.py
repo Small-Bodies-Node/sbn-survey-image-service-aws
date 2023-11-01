@@ -21,7 +21,7 @@ def test_lid_to_url(lid, expected_url):
     assert url == expected_url
 
 
-def test_cutout_handler():
+def test_cutout_handler_css():
     lid = "urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated:g96_20210402_2b_f5q9m2_01_0001.arch"
     hdu = cutout_handler(lid, "12:43:58", "23:55:23", "5 arcsec")
 
@@ -39,3 +39,23 @@ def test_cutout_handler():
 
     assert hdu[0].header["CRPIX1"] == 286.5
     assert hdu[0].header["CRPIX2"] == -274.5
+
+
+def test_cutout_handler_spacewatch():
+    lid = "urn:nasa:pds:gbo.ast.spacewatch.survey:data:sw_1007_38.07_2004_05_20_06_40_15.003.fits"
+    hdu = cutout_handler(lid, "15:55:51.122", "-14:28:24.055", "3 arcsec")
+
+    assert np.all(
+        hdu[0].data
+        == np.array(
+            [
+                [2811.8281, 2785.9785, 2773.0547],
+                [2781.0078, 2824.752, 2835.6875],
+                [2766.0957, 2831.711, 2779.0195],
+            ],
+            dtype=np.float32,
+        )
+    )
+
+    assert np.isclose(hdu[0].header["CRPIX1"], 724.34107357)
+    assert np.isclose(hdu[0].header["CRPIX2"], -396.394579044)

@@ -1,7 +1,7 @@
 import io
 import warnings
 from enum import Enum
-from typing import Dict
+from typing import Any, Callable, Dict, Union
 import requests
 from PIL import Image
 import numpy as np
@@ -34,13 +34,40 @@ class ImageFormat(Enum):
     PNG: str = "png"
 
 
+class LID:
+    """PDS4 logical identifier."""
+
+    def __init__(self, lid: Any) -> None:
+        self._lid = str(lid)
+        if not self._lid.startswith("urn:nasa:pds"):
+            raise ValueError(f"Invalid PDS4 LID: {lid}")
+
+    def __str__(self) -> str:
+        return self._lid
+
+    def __repr__(self) -> str:
+        return f"<LID: {self._lid}>"
+
+    @property
+    def bundle(self) -> str:
+        return self._lid.split(":")[3]
+
+    @property
+    def collection(self) -> str:
+        return self._lid.split(":")[4]
+
+    @property
+    def product_id(self) -> str:
+        return self._lid.split(":")[5]
+
+
 def cutout_handler(lid: str, ra: str, dec: str, size: str) -> fits.HDUList:
     """Entry point for getting image cutouts.
 
 
     Parameters
     ----------
-    lid : string
+    lid : LID
         PDS4 logical identifier.
 
     ra : string
@@ -58,6 +85,8 @@ def cutout_handler(lid: str, ra: str, dec: str, size: str) -> fits.HDUList:
 
     """
 
+    lid: LID = LID(lid)
+
     position: SkyCoord = SkyCoord(ra, dec, unit=(u.hourangle, u.deg))
     _size: u.QuantityInfo = np.minimum(u.Quantity(size), 15 * u.arcmin)
 
@@ -66,17 +95,21 @@ def cutout_handler(lid: str, ra: str, dec: str, size: str) -> fits.HDUList:
 
     data: fits.HDUList = fits.open(io.BytesIO(response.content))
 
-    data[1].header["CTYPE1"] = "RA---TPV"
-    data[1].header["CTYPE2"] = "DEC--TPV"
+    i: int = 0
+    if lid.bundle == "gbo.ast.catalina.survey":
+        i = 1
+
+    data[i].header["CTYPE1"] = "RA---TPV"
+    data[i].header["CTYPE2"] = "DEC--TPV"
     with warnings.catch_warnings():
         warnings.simplefilter(
             "ignore",
             (fits.verify.VerifyWarning, FITSFixedWarning)
         )
-        wcs: WCS = WCS(data[1].header)
+        wcs: WCS = WCS(data[i].header)
 
-    cutout: Cutout2D = Cutout2D(data[1].data, position, _size, wcs=wcs)
-    header: fits.Header = data[1].header
+    cutout: Cutout2D = Cutout2D(data[i].data, position, _size, wcs=wcs)
+    header: fits.Header = data[i].header
     header.update(cutout.wcs.to_header())
 
     hdu: fits.HDUList = fits.HDUList()
@@ -86,22 +119,13 @@ def cutout_handler(lid: str, ra: str, dec: str, size: str) -> fits.HDUList:
     return hdu
 
 
-def get_product_id(lid: str) -> str:
-    try:
-        product_id: str = lid.split(":")[5]
-    except IndexError:
-        raise ValueError("Invalid PDS4 logical identifier.")
-
-    return product_id
-
-
-def lid_to_url(lid: str) -> str:
+def lid_to_url(lid: Union[LID, str]) -> str:
     """Convert PDS4 LID to URL.
 
 
     Parameters
     ----------
-    lid : string
+    lid : LID
         PDS4 LID.
 
 
@@ -111,22 +135,18 @@ def lid_to_url(lid: str) -> str:
 
     """
 
-    url: str
-    if lid.startswith("urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated"):
-        url = css_lid_to_url(lid)
-    elif lid.startswith("urn:nasa:pds:gbo.ast.spacewatch.survey"):
-        url = spacewatch_lid_to_url(lid)
-    elif lid.startswith("urn:nasa:pds:gbo.ast.neat.survey:data_geodss"):
-        url = neat_geodss_lid_to_url(lid)
-    elif lid.startswith("urn:nasa:pds:gbo.ast.neat.survey:data_tricam"):
-        url = neat_tricam_lid_to_url(lid)
-    else:
-        raise ValueError("Unsupported or invalid PDS4 logical identifier.")
+    lid: LID = LID(lid)
 
-    return url
+    get_url: Dict[str, Callable] = {
+        "gbo.ast.catalina.survey": css_lid_to_url,
+        "gbo.ast.spacewatch.survey": spacewatch_lid_to_url,
+        "gbo.ast.neat.survey": neat_lid_to_url,
+    }
+
+    return get_url[lid.bundle](lid)
 
 
-def css_lid_to_url(lid: str) -> str:
+def css_lid_to_url(lid: Union[LID, str]) -> str:
     """Catalina Sky Survey LID to URL
 
     urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated:g96_20210402_2b_f5q9m2_01_0001.arch
@@ -134,10 +154,10 @@ def css_lid_to_url(lid: str) -> str:
 
     """
 
-    base_url: str = "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/data_calibrated"
+    lid: LID = LID(lid)
 
-    product_id: str = get_product_id(lid)
-    basename: str = product_id.upper()[:product_id.index(".")]
+    base_url: str = f"https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/{lid.collection}"
+    basename: str = lid.product_id.upper()[:lid.product_id.index(".")]
 
     telescope: str
     date: str
@@ -153,7 +173,7 @@ def css_lid_to_url(lid: str) -> str:
     return f"{base_url}/{telescope}/{date[:4]}/{YYMonDD}/{basename}.arch.fz"
 
 
-def spacewatch_lid_to_url(lid: str) -> str:
+def spacewatch_lid_to_url(lid: Union[LID, str]) -> str:
     """Spacewatch LID to URL.
 
     urn:nasa:pds:gbo.ast.spacewatch.survey:data:sw_0993_09.01_2003_03_23_09_18_47.001.fits
@@ -161,22 +181,35 @@ def spacewatch_lid_to_url(lid: str) -> str:
 
     """
 
-    base_url: str = "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.spacewatch.survey/data"
+    lid: LID = LID(lid)
 
-    product_id: str = get_product_id(lid)
+    base_url: str = "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.spacewatch.survey/data"
 
     year: str
     month: str
     day: str
     try:
-        year, month, day = product_id.split("_")[3:6]
+        year, month, day = lid.product_id.split("_")[3:6]
     except IndexError:
         raise ValueError(f"Invalid Spacewatch PDS4 logical identifier: {lid}")
 
-    return f"{base_url}/{year}/{month}/{day}/{product_id}"
+    return f"{base_url}/{year}/{month}/{day}/{lid.product_id}"
 
 
-def neat_geodss_lid_to_url(lid: str) -> str:
+def neat_lid_to_url(lid: Union[LID, str]) -> str:
+    """NEAT LID to URL."""
+
+    lid: LID = LID(lid)
+
+    get_url: Dict[str, Callable] = {
+        "data_geodss": neat_geodss_lid_to_url,
+        "data_tricam": neat_tricam_lid_to_url,
+    }
+
+    return get_url[lid.collection](lid)
+
+
+def neat_geodss_lid_to_url(lid: Union[LID, str]) -> str:
     """NEAT GEODSS LID to URL.
 
     urn:nasa:pds:gbo.ast.neat.survey:data_geodss:g19960417_obsdata_960417070119d
@@ -184,18 +217,19 @@ def neat_geodss_lid_to_url(lid: str) -> str:
 
     """
 
+    lid: LID = LID(lid)
+
     base_url: str = "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_geodss"
-    product_id: str = get_product_id(lid)
 
     basename: str
     directory: str
-    directory, basename = product_id.rsplit("_", 1)
+    directory, basename = lid.product_id.rsplit("_", 1)
     directory = directory.replace("_", "/")
 
     return f"{base_url}/{directory}/{basename}.fit.fz"
 
 
-def neat_tricam_lid_to_url(lid: str) -> str:
+def neat_tricam_lid_to_url(lid: Union[LID, str]) -> str:
     """NEAT Tricam LID to URL.
 
     urn:nasa:pds:gbo.ast.neat.survey:data_tricam:p20011120_obsdata_20011120014036d
@@ -203,12 +237,13 @@ def neat_tricam_lid_to_url(lid: str) -> str:
 
     """
 
+    lid: LID = LID(lid)
+
     base_url: str = "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_tricam"
-    product_id: str = get_product_id(lid)
 
     basename: str
     directory: str
-    directory, basename = product_id.rsplit("_", 1)
+    directory, basename = lid.product_id.rsplit("_", 1)
     directory = directory.replace("_", "/")
 
     return f"{base_url}/{directory}/{basename}.fit.fz"
