@@ -7,11 +7,12 @@ from sbn_sis import cutout_handler, fits_to_image, ImageFormat
 
 def lambda_handler(event: dict, context):
     image_format: ImageFormat = ImageFormat(
-        event["queryStringParameters"]["format"].lower())
+        event["queryStringParameters"]["format"].lower()
+    )
     hdu: fits.HDUList = cutout_handler(
         event["queryStringParameters"]["lid"],
-        event["queryStringParameters"]["ra"],
-        event["queryStringParameters"]["dec"],
+        float(event["queryStringParameters"]["ra"]),
+        float(event["queryStringParameters"]["dec"]),
         event["queryStringParameters"]["size"],
     )
 

@@ -61,7 +61,7 @@ class LID:
         return self._lid.split(":")[5]
 
 
-def cutout_handler(lid: str, ra: str, dec: str, size: str) -> fits.HDUList:
+def cutout_handler(lid: str, ra: float, dec: float, size: str) -> fits.HDUList:
     """Entry point for getting image cutouts.
 
 
@@ -70,13 +70,14 @@ def cutout_handler(lid: str, ra: str, dec: str, size: str) -> fits.HDUList:
     lid : LID
         PDS4 logical identifier.
 
-    ra : string
-    dec : string
-        Right ascension and declination in hour angle and degrees, parsable by
-        `astropy.coordinates.SkyCoord`.
+    ra : float
+        Right ascension in units of degrees.
+
+    dec : float
+        Declination in units of degrees.
 
     size : string
-        Cutout size, parsable by `astropy.units.Quantity`.
+        Cutout size, parsable by `astropy.units.Quantity`.  Minimum 1 arcsec.
 
 
     Returns
@@ -87,8 +88,8 @@ def cutout_handler(lid: str, ra: str, dec: str, size: str) -> fits.HDUList:
 
     lid: LID = LID(lid)
 
-    position: SkyCoord = SkyCoord(ra, dec, unit=(u.hourangle, u.deg))
-    _size: u.QuantityInfo = np.minimum(u.Quantity(size), 15 * u.arcmin)
+    position: SkyCoord = SkyCoord(ra, dec, unit=(u.deg, u.deg))
+    _size: u.Quantity = np.maximum(u.Quantity(size), 1 * u.arcsec)
 
     url: str = lid_to_url(lid)
     response: requests.Response = requests.get(url)
@@ -102,10 +103,7 @@ def cutout_handler(lid: str, ra: str, dec: str, size: str) -> fits.HDUList:
     data[i].header["CTYPE1"] = "RA---TPV"
     data[i].header["CTYPE2"] = "DEC--TPV"
     with warnings.catch_warnings():
-        warnings.simplefilter(
-            "ignore",
-            (fits.verify.VerifyWarning, FITSFixedWarning)
-        )
+        warnings.simplefilter("ignore", (fits.verify.VerifyWarning, FITSFixedWarning))
         wcs: WCS = WCS(data[i].header)
 
     cutout: Cutout2D = Cutout2D(data[i].data, position, _size, wcs=wcs)
@@ -157,7 +155,7 @@ def css_lid_to_url(lid: Union[LID, str]) -> str:
     lid: LID = LID(lid)
 
     base_url: str = f"https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/{lid.collection}"
-    basename: str = lid.product_id.upper()[:lid.product_id.index(".")]
+    basename: str = lid.product_id.upper()[: lid.product_id.index(".")]
 
     telescope: str
     date: str
@@ -166,9 +164,7 @@ def css_lid_to_url(lid: Union[LID, str]) -> str:
         telescope, date = basename.split("_")[:2]
         YYMonDD = f"{date[2:4]}{mm_to_Mon[date[4:6]]}{date[6:8]}"
     except IndexError:
-        raise ValueError(
-            f"Invalid Catalina Sky Survey PDS4 logical identifier: {lid}."
-        )
+        raise ValueError(f"Invalid Catalina Sky Survey PDS4 logical identifier: {lid}.")
 
     return f"{base_url}/{telescope}/{date[:4]}/{YYMonDD}/{basename}.arch.fz"
 
@@ -183,7 +179,9 @@ def spacewatch_lid_to_url(lid: Union[LID, str]) -> str:
 
     lid: LID = LID(lid)
 
-    base_url: str = "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.spacewatch.survey/data"
+    base_url: str = (
+        "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.spacewatch.survey/data"
+    )
 
     year: str
     month: str
@@ -219,7 +217,9 @@ def neat_geodss_lid_to_url(lid: Union[LID, str]) -> str:
 
     lid: LID = LID(lid)
 
-    base_url: str = "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_geodss"
+    base_url: str = (
+        "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_geodss"
+    )
 
     basename: str
     directory: str
@@ -239,7 +239,9 @@ def neat_tricam_lid_to_url(lid: Union[LID, str]) -> str:
 
     lid: LID = LID(lid)
 
-    base_url: str = "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_tricam"
+    base_url: str = (
+        "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_tricam"
+    )
 
     basename: str
     directory: str
