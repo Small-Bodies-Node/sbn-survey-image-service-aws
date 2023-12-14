@@ -1,7 +1,10 @@
 
 SOURCE_FILES := src/lambda_function.py src/sbn_sis.py
 
-.PHONY: test deploy clean
+# create .env from a copy of env.template
+include .env
+
+.PHONY: test deploy clean env
 default: sbn-sis.zip
 
 src/python:
@@ -19,14 +22,14 @@ sbn-sis.zip: $(SOURCE_FILES)
 test:
 	pytest src/
 
-deploy: sbn-sis.zip
+deploy: .env sbn-sis.zip
 	aws lambda update-function-code \
-		--function-name sbn-survey-image-service \
+		--function-name $(LAMBDA_FUNCTION_NAME) \
 		--zip-file fileb://sbn-sis.zip
 
-deploy-dependencies: sbn-sis-dependencies.zip
+deploy-dependencies: env sbn-sis-dependencies.zip
 	aws lambda publish-layer-version \
-		--layer-name sbn-survey-image-service-dependencies \
+		--layer-name $(LAMBDA_DEPENDENCIES_LAYER) \
 		--zip-file fileb://sbn-sis-dependencies.zip
 
 clean:
