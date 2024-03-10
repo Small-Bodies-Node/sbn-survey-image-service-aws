@@ -1,5 +1,6 @@
 
-SOURCE_FILES := src/lambda_function.py src/sbn_sis.py
+# SOURCE_FILES := src/lambda_function.py src/sbn_sis.py
+SOURCE_FILES := src/*.py
 
 # create .env from a copy of env.template
 include .env
@@ -7,6 +8,7 @@ include .env
 .PHONY: test deploy clean env
 default: sbn-sis.zip
 
+# WARNING! You must run this on a linux!
 src/python:
 	python3.11 -m venv --prompt=sbn-sis-lambda src/python
 	. src/python/bin/activate && pip install astropy requests Pillow
@@ -15,7 +17,7 @@ sbn-sis-dependencies.zip: src/python
 	rm -f $@
 	cd src && zip -r ../$@ python/lib/python3.11/site-packages --exclude python/lib/python3.11/site-packages/pip\* --exclude python/lib/python3.11/site-packages/setuptools\*
 
-sbn-sis.zip: $(SOURCE_FILES)
+sbn-sis.zip: ${SOURCE_FILES}
 	rm -f $@
 	cd src && zip ../$@ $(patsubst src/%,%,$^)
 
@@ -24,12 +26,17 @@ test:
 
 deploy: .env sbn-sis.zip
 	aws lambda update-function-code \
-		--function-name $(LAMBDA_FUNCTION_NAME) \
+		--function-name ${LAMBDA_FUNCTION_NAME} \
 		--zip-file fileb://sbn-sis.zip
+
+update-env-vars:
+	aws lambda update-function-configuration \
+    --function-name ${LAMBDA_FUNCTION_NAME} \
+    --environment Variables="{S3_CACHE_BUCKET_NAME=${S3_CACHE_BUCKET_NAME}}"
 
 deploy-dependencies: env sbn-sis-dependencies.zip
 	aws lambda publish-layer-version \
-		--layer-name $(LAMBDA_DEPENDENCIES_LAYER) \
+		--layer-name ${LAMBDA_DEPENDENCIES_LAYER} \
 		--zip-file fileb://sbn-sis-dependencies.zip
 
 clean:
