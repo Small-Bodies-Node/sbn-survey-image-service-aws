@@ -1,6 +1,5 @@
-
-# SOURCE_FILES := src/lambda_function.py src/sbn_sis.py
 SOURCE_FILES := src/*.py
+PYTHON := python3.12
 
 # create .env from a copy of env.template
 include .env
@@ -10,19 +9,23 @@ default: sbn-sis.zip
 
 # WARNING! You must run this on a linux!
 src/python:
-	python3.11 -m venv --prompt=sbn-sis-lambda src/python
-	. src/python/bin/activate && pip install astropy requests Pillow
+	${PYTHON} -m venv --prompt=sbn-sis-lambda src/python
+	. src/python/bin/activate && pip install astropy fsspec requests Pillow
+
+test-venv:
+	${PYTHON} -m venv --prompt=sbn-sis-lambda-testing test-venv
+	. test-venv/bin/activate && pip install astropy fsspec requests Pillow pytest
 
 sbn-sis-dependencies.zip: src/python
 	rm -f $@
-	cd src && zip -r ../$@ python/lib/python3.11/site-packages --exclude python/lib/python3.11/site-packages/pip\* --exclude python/lib/python3.11/site-packages/setuptools\*
+	cd src && zip -r ../$@ python/lib/${PYTHON}/site-packages --exclude python/lib/${PYTHON}/site-packages/pip\* --exclude python/lib/${PYTHON}/site-packages/setuptools\*
 
 sbn-sis.zip: ${SOURCE_FILES}
 	rm -f $@
 	cd src && zip ../$@ $(patsubst src/%,%,$^)
 
-test:
-	pytest src/
+test: test-venv
+	. test-venv/bin/activate && pytest src/
 
 deploy: .env sbn-sis.zip
 	aws lambda update-function-code \
