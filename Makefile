@@ -1,5 +1,6 @@
 SOURCE_FILES := src/*.py
 PYTHON := python3.12
+DEPENDENICES := astropy fsspec requests aiohttp Pillow pytest
 
 # create .env from a copy of env.template
 include .env
@@ -10,11 +11,11 @@ default: sbn-sis.zip
 # WARNING! You must run this on a linux!
 src/python:
 	${PYTHON} -m venv --prompt=sbn-sis-lambda src/python
-	. src/python/bin/activate && pip install astropy fsspec requests Pillow
+	. src/python/bin/activate && pip install ${DEPENDENICES}
 
 test-venv:
 	${PYTHON} -m venv --prompt=sbn-sis-lambda-testing test-venv
-	. test-venv/bin/activate && pip install astropy fsspec requests Pillow pytest
+	. test-venv/bin/activate && pip install ${DEPENDENICES}
 
 sbn-sis-dependencies.zip: src/python
 	rm -f $@
@@ -25,7 +26,7 @@ sbn-sis.zip: ${SOURCE_FILES}
 	cd src && zip ../$@ $(patsubst src/%,%,$^)
 
 test: test-venv
-	. test-venv/bin/activate && pytest src/
+	. test-venv/bin/activate && pytest src/ -v --durations=0
 
 deploy: .env sbn-sis.zip
 	aws lambda update-function-code \
