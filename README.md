@@ -12,7 +12,7 @@ It is used by [CATCH](https://catch.astro.umd.edu) and other services maintained
 
 ## Overview
 
-The AWS Lambda function receives path params and query params, checks if a corresponding image exists within the S3 bucket and returns that if it does. If the image does not exist then the master fits file is retrieved from `sbnarchive.psi.edu`, a cutout is made, and either returned directly or used to generate a JPEG file. Before returning the file is saved to the image cache.
+The AWS Lambda function receives path params and query params, checks if a corresponding image exists within the S3 bucket and returns that if it does. If the image does not exist then the master fits file is retrieved from `sbnarchive.psi.edu`, a cutout is made, and either returned directly or used to generate a JPEG file. The file is cached and returned to the user.
 
 ## Development notes
 
