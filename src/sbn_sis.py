@@ -1,7 +1,5 @@
-import io
 import warnings
 from enum import Enum
-import requests
 from PIL import Image
 import numpy as np
 import astropy.units as u
@@ -51,29 +49,29 @@ def cutout_handler(lid: str, ra: float, dec: float, size: str) -> fits.HDUList:
     _size: u.Quantity = np.maximum(u.Quantity(size), 1 * u.arcsec)
 
     url: str = lid_to_url(lid)
-    response: requests.Response = requests.get(url)
+    data: fits.HDUList
+    with fits.open(url, use_fsspec=True, lazy_load_hdus=True) as data:
+        i: int = 0
+        if lid.bundle == "gbo.ast.catalina.survey":
+            i = 1
 
-    data: fits.HDUList = fits.open(io.BytesIO(response.content))
+        data[i].header["CTYPE1"] = "RA---TPV"
+        data[i].header["CTYPE2"] = "DEC--TPV"
+        with warnings.catch_warnings():
+            warnings.simplefilter(
+                "ignore", (fits.verify.VerifyWarning, FITSFixedWarning)
+            )
+            wcs: WCS = WCS(data[i].header)
 
-    i: int = 0
-    if lid.bundle == "gbo.ast.catalina.survey":
-        i = 1
+        cutout: Cutout2D = Cutout2D(data[i].section, position, _size, wcs=wcs)
 
-    data[i].header["CTYPE1"] = "RA---TPV"
-    data[i].header["CTYPE2"] = "DEC--TPV"
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", (fits.verify.VerifyWarning, FITSFixedWarning))
-        wcs: WCS = WCS(data[i].header)
+        header: fits.Header = data[i].header
+        header.update(cutout.wcs.to_header())
 
-    cutout: Cutout2D = Cutout2D(data[i].data, position, _size, wcs=wcs)
-    header: fits.Header = data[i].header
-    header.update(cutout.wcs.to_header())
+    result: fits.HDUList = fits.HDUList()
+    result.append(fits.PrimaryHDU(cutout.data, header))
 
-    hdu: fits.HDUList = fits.HDUList()
-    hdu.append(fits.PrimaryHDU(cutout.data, header))
-
-    del data
-    return hdu
+    return result
 
 
 def fits_to_image(hdu: fits.HDUList) -> Image:
