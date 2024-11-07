@@ -50,8 +50,13 @@ Test Lambda function:
 }
 ```
 
-Test Gateway API query string:
+Test API Gateway query string:
 
 ```
 /images/urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated:g96_20210402_2b_f5q9m2_01_0001.arch?ra=190.99166667&dec=23.92305556&size=5arcmin&format=jpeg
 ```
+
+Test API Gateway method:
+
+lid: urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated:g96_20210402_2b_f5q9m2_01_0001.arch
+Query strings: ra=190.99166667&dec=23.92305556&size=5arcmin
