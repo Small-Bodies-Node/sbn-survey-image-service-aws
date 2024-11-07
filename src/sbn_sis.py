@@ -1,4 +1,5 @@
 import warnings
+from copy import copy
 from enum import Enum
 from PIL import Image
 import numpy as np
@@ -50,26 +51,35 @@ def cutout_handler(lid: str, ra: float, dec: float, size: str) -> fits.HDUList:
 
     url: str = lid_to_url(lid)
     data: fits.HDUList
-    with fits.open(url, use_fsspec=True, lazy_load_hdus=True) as data:
+    fsspec_kwargs = {"block_size": 1024 * 64, "cache_type": "bytes"}
+    with fits.open(
+        url,
+        cache=False,
+        use_fsspec=True,
+        lazy_load_hdus=True,
+        fsspec_kwargs=fsspec_kwargs,
+    ) as data:
         i: int = 0
         if lid.bundle == "gbo.ast.catalina.survey":
             i = 1
 
-        data[i].header["CTYPE1"] = "RA---TPV"
-        data[i].header["CTYPE2"] = "DEC--TPV"
+        header: fits.Header = copy(data[i].header)
+        header["CTYPE1"] = "RA---TPV"
+        header["CTYPE2"] = "DEC--TPV"
+
         with warnings.catch_warnings():
             warnings.simplefilter(
                 "ignore", (fits.verify.VerifyWarning, FITSFixedWarning)
             )
-            wcs: WCS = WCS(data[i].header)
+            wcs: WCS = WCS(header)
 
         cutout: Cutout2D = Cutout2D(data[i].section, position, _size, wcs=wcs)
+        cutout_image: np.ndarray = cutout.data
 
-        header: fits.Header = data[i].header
         header.update(cutout.wcs.to_header())
 
     result: fits.HDUList = fits.HDUList()
-    result.append(fits.PrimaryHDU(cutout.data, header))
+    result.append(fits.PrimaryHDU(cutout_image, header))
 
     return result
 
