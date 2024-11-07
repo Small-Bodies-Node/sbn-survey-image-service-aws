@@ -1,6 +1,5 @@
 import warnings
 from copy import copy
-from enum import Enum
 from PIL import Image
 import numpy as np
 import astropy.units as u
@@ -11,12 +10,6 @@ from astropy.wcs import WCS, FITSFixedWarning
 from astropy.visualization import ZScaleInterval
 from lid import LID
 from lid_to_url import lid_to_url
-
-
-class ImageFormat(Enum):
-    FITS: str = "fits"
-    JPEG: str = "jpeg"
-    PNG: str = "png"
 
 
 def cutout_handler(lid: str, ra: float, dec: float, size: str) -> fits.HDUList:

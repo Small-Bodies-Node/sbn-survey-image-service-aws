@@ -1,14 +1,21 @@
 import os
 import io
 import base64
+from enum import Enum
 
 from PIL import Image
 from astropy.io import fits
-from sbn_sis import cutout_handler, fits_to_image, ImageFormat
+from sbn_sis import cutout_handler, fits_to_image
 
 from get_file_name import get_file_name
 from set_image_to_s3_cache import set_image_to_s3_cache
 from get_image_from_s3_cache import get_image_from_s3_cache
+
+
+class ImageFormat(Enum):
+    FITS: str = "fits"
+    JPEG: str = "jpeg"
+    PNG: str = "png"
 
 
 def lambda_handler(event: dict, context):
