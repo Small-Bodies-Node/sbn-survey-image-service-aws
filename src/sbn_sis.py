@@ -44,7 +44,7 @@ def cutout_handler(lid: str, ra: float, dec: float, size: str) -> fits.HDUList:
 
     url: str = lid_to_url(lid)
     data: fits.HDUList
-    fsspec_kwargs = {"block_size": 1024 * 64, "cache_type": "bytes"}
+    fsspec_kwargs = {"block_size": 1024 * 512, "cache_type": "bytes"}
     with fits.open(
         url,
         cache=False,
