@@ -43,8 +43,12 @@ def cutout_handler(lid: str, ra: float, dec: float, size: str) -> fits.HDUList:
     _size: u.Quantity = np.maximum(u.Quantity(size), 1 * u.arcsec)
 
     url: str = lid_to_url(lid)
-    data: fits.HDUList
+
     fsspec_kwargs = {"block_size": 1024 * 512, "cache_type": "bytes"}
+    if url.startswith("s3"):
+        fsspec_kwargs["anon"] = True
+
+    data: fits.HDUList
     with fits.open(
         url,
         cache=False,
