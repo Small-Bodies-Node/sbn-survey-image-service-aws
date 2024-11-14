@@ -1,7 +1,7 @@
 DEV_SOURCE_FILES := src/local_lambda_run.py src/test_sbn_sis.py
 SOURCE_FILES := $(filter-out $(DEV_SOURCE_FILES),$(wildcard src/*.py))
 PYTHON := python3.12
-DEPENDENICES := astropy fsspec requests aiohttp Pillow pytest
+DEPENDENICES := astropy fsspec requests aiohttp Pillow pytest s3fs
 
 # create .env from a copy of env.template
 include .env

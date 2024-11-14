@@ -82,9 +82,18 @@ def test_css_lid_to_url(bucket, date, expected_url):
     assert url == expected_url
 
 
-def test_cutout_handler_css():
-    if "S3_CSS_BUCKET_NAME" in os.environ:
+@pytest.mark.parametrize("bucket", [None, "pds-css-archive"])
+def test_cutout_handler_css(bucket):
+    if bucket is None and "S3_CSS_BUCKET_NAME" in os.environ:
         del os.environ["S3_CSS_BUCKET_NAME"]
+    elif bucket is not None:
+        os.environ.update(
+            {
+                "S3_CSS_BUCKET_NAME": bucket,
+                "S3_CSS_DATE_LIMIT": "20230430",
+            }
+        )
+
     lid = "urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated:g96_20210402_2b_f5q9m2_01_0001.arch"
     hdu = cutout_handler(lid, 190.99166667, 23.92305556, "5 arcsec")
 

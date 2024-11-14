@@ -44,9 +44,12 @@ def cutout_handler(lid: str, ra: float, dec: float, size: str) -> fits.HDUList:
 
     url: str = lid_to_url(lid)
 
-    fsspec_kwargs = {"block_size": 1024 * 512, "cache_type": "bytes"}
+    fsspec_kwargs = {}
     if url.startswith("s3"):
         fsspec_kwargs["anon"] = True
+    else:
+        # for http or even local files:
+        fsspec_kwargs.update({"block_size": 1024 * 512, "cache_type": "bytes"})
 
     data: fits.HDUList
     with fits.open(
