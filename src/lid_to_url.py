@@ -39,6 +39,7 @@ def lid_to_url(lid: LID | str) -> str:
         "gbo.ast.catalina.survey": css_lid_to_url,
         "gbo.ast.spacewatch.survey": spacewatch_lid_to_url,
         "gbo.ast.neat.survey": neat_lid_to_url,
+        "gbo.ast.loneos.survey": loneos_lid_to_url,
     }
 
     return get_url[lid.bundle](lid)
@@ -151,3 +152,38 @@ def neat_tricam_lid_to_url(lid: LID | str) -> str:
     directory = directory.replace("_", "/")
 
     return f"{base_url}/{directory}/{basename}.fit.fz"
+
+
+def loneos_lid_to_url(lid: LID | str) -> str:
+    """LONEOS LID to URL
+
+    urn:nasa:pds:gbo.ast.loneos.survey:data_augmented:041226_2a_082_fits
+    -> https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.loneos.survey/data_augmented/
+        lois_3_2_0_beta/041226/041226_2a_082.fits
+
+    urn:nasa:pds:gbo.ast.loneos.survey:data_augmented:051113_1a_011_fits
+    -> https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.loneos.survey/data_augmented/
+        lois_4_2_0/051113/051113_1a_011.fits
+
+    Using the date to determine the URL:
+        * Last lois_3_2_0_beta data is 041226
+        * First lois 4_2_0 data is 051113
+
+    """
+
+    lid: LID = LID(lid)
+
+    fn: str = lid.product_id[:-5] + ".fits"
+    date: str = lid.product_id[:6]
+
+    lois: str
+    if date < "050101":
+        lois = "lois_3_2_0_beta"
+    else:
+        lois = "lois_4_2_0"
+
+    base_url: str = (
+        "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.loneos.survey/data_augmented"
+    )
+
+    return f"{base_url}/{lois}/{date}/{fn}"

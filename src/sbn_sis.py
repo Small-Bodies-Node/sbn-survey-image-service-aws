@@ -57,8 +57,11 @@ def cutout_handler(lid: str, ra: float, dec: float, size: str) -> fits.HDUList:
             i = 1
 
         header: fits.Header = copy(data[i].header)
-        header["CTYPE1"] = "RA---TPV"
-        header["CTYPE2"] = "DEC--TPV"
+
+        # use distortions in CSS and SW data
+        if lid.bundle in ["gbo.ast.catalina.survey", "gbo.ast.spacewatch.survey"]:
+            header["CTYPE1"] = "RA---TPV"
+            header["CTYPE2"] = "DEC--TPV"
 
         with warnings.catch_warnings():
             warnings.simplefilter(

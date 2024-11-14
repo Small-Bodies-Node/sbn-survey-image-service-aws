@@ -7,20 +7,38 @@ from sbn_sis import lid_to_url, cutout_handler
     "lid,expected_url",
     [
         (
-            "urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated:g96_20210402_2b_f5q9m2_01_0001.arch",
-            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/data_calibrated/G96/2021/21Apr02/G96_20210402_2B_F5Q9M2_01_0001.arch.fz",
+            "urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated:"
+            "g96_20210402_2b_f5q9m2_01_0001.arch",
+            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/"
+            "data_calibrated/G96/2021/21Apr02/G96_20210402_2B_F5Q9M2_01_0001.arch.fz",
         ),
         (
-            "urn:nasa:pds:gbo.ast.spacewatch.survey:data:sw_0993_09.01_2003_03_23_09_18_47.001.fits",
-            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.spacewatch.survey/data/2003/03/23/sw_0993_09.01_2003_03_23_09_18_47.001.fits",
+            "urn:nasa:pds:gbo.ast.spacewatch.survey:data:"
+            "sw_0993_09.01_2003_03_23_09_18_47.001.fits",
+            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.spacewatch.survey/"
+            "data/2003/03/23/sw_0993_09.01_2003_03_23_09_18_47.001.fits",
         ),
         (
-            "urn:nasa:pds:gbo.ast.neat.survey:data_geodss:g19960417_obsdata_960417070119d",
-            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_geodss/g19960417/obsdata/960417070119d.fit.fz",
+            "urn:nasa:pds:gbo.ast.neat.survey:data_geodss:"
+            "g19960417_obsdata_960417070119d",
+            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_geodss/"
+            "g19960417/obsdata/960417070119d.fit.fz",
         ),
         (
-            "urn:nasa:pds:gbo.ast.neat.survey:data_tricam:p20011120_obsdata_20011120014036d",
-            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_tricam/p20011120/obsdata/20011120014036d.fit.fz",
+            "urn:nasa:pds:gbo.ast.neat.survey:data_tricam:"
+            "p20011120_obsdata_20011120014036d",
+            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_tricam/"
+            "p20011120/obsdata/20011120014036d.fit.fz",
+        ),
+        (
+            "urn:nasa:pds:gbo.ast.loneos.survey:data_augmented:041226_2a_082_fits",
+            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.loneos.survey/"
+            "data_augmented/lois_3_2_0_beta/041226/041226_2a_082.fits",
+        ),
+        (
+            "urn:nasa:pds:gbo.ast.loneos.survey:data_augmented:051113_1a_011_fits",
+            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.loneos.survey/"
+            "data_augmented/lois_4_2_0/051113/051113_1a_011.fits",
         ),
     ],
 )
@@ -67,3 +85,23 @@ def test_cutout_handler_spacewatch():
 
     assert np.isclose(hdu[0].header["CRPIX1"], 724.34107357)
     assert np.isclose(hdu[0].header["CRPIX2"], -396.394579044)
+
+
+def test_cutout_handler_loneos():
+    lid = "urn:nasa:pds:gbo.ast.loneos.survey:data_augmented:051113_1a_011_fits"
+    hdu = cutout_handler(lid, 320.8154669, 9.1222266, "8 arcsec")
+
+    assert np.all(
+        hdu[0].data
+        == np.array(
+            [
+                [24201, 26761, 21229],
+                [26799, 32070, 26410],
+                [19010, 21363, 18396],
+            ],
+            dtype=np.uint16,
+        )
+    )
+
+    assert np.isclose(hdu[0].header["CRPIX1"], 435.5)
+    assert np.isclose(hdu[0].header["CRPIX2"], -240.5)
