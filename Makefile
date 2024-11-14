@@ -1,7 +1,8 @@
 DEV_SOURCE_FILES := src/local_lambda_run.py src/test_sbn_sis.py
 SOURCE_FILES := $(filter-out $(DEV_SOURCE_FILES),$(wildcard src/*.py))
 PYTHON := python3.12
-DEPENDENICES := astropy fsspec requests aiohttp Pillow pytest
+DEPENDENCIES := astropy fsspec requests aiohttp Pillow
+TEST_DEPENDENCIES := pytest
 
 # create .env from a copy of env.template
 include .env
@@ -12,11 +13,11 @@ default: sbn-sis.zip
 # WARNING! You must run this on a linux!
 src/python:
 	${PYTHON} -m venv --prompt=sbn-sis-lambda src/python
-	. src/python/bin/activate && pip install ${DEPENDENICES}
+	. src/python/bin/activate && pip install ${DEPENDENCIES}
 
 test-venv:
 	${PYTHON} -m venv --prompt=sbn-sis-lambda-testing test-venv
-	. test-venv/bin/activate && pip install ${DEPENDENICES}
+	. test-venv/bin/activate && pip install ${DEPENDENCIES} ${TEST_DEPENDENCIES}
 
 sbn-sis-dependencies.zip: src/python
 	rm -f $@
