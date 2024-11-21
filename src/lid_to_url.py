@@ -1,7 +1,8 @@
-from typing import Callable, Dict
+import os
+from typing import Callable
 from lid import LID
 
-mm_to_Mon: Dict[str, str] = {
+mm_to_Mon: dict[str, str] = {
     "01": "Jan",
     "02": "Feb",
     "03": "Mar",
@@ -35,7 +36,7 @@ def lid_to_url(lid: LID | str) -> str:
 
     lid: LID = LID(lid)
 
-    get_url: Dict[str, Callable] = {
+    get_url: dict[str, Callable] = {
         "gbo.ast.catalina.survey": css_lid_to_url,
         "gbo.ast.spacewatch.survey": spacewatch_lid_to_url,
         "gbo.ast.neat.survey": neat_lid_to_url,
@@ -48,16 +49,23 @@ def lid_to_url(lid: LID | str) -> str:
 def css_lid_to_url(lid: LID | str) -> str:
     """Catalina Sky Survey LID to URL
 
+    Uses an S3 HTTPS endpoint if date is <= S3_CSS_DATE_LIMIT:
+
     urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated:g96_20210402_2b_f5q9m2_01_0001.arch
-    --> https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/data_calibrated/G96/2021/21Apr02/G96_20210402_2B_F5Q9M2_01_0001.arch.fz
+    --> https://pds-css-archive.s3.us-west-2.amazonaws.com/sbn/gbo.ast.catalina.survey/data_calibrated/G96/2021/21Apr02/
+        G96_20210402_2B_F5Q9M2_01_0001.arch.fz
+
+    HTTP at PSI otherwise:
+
+    urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated:g96_20210402_2b_f5q9m2_01_0001.arch
+    --> https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/data_calibrated/G96/2021/21Apr02/
+        G96_20210402_2B_F5Q9M2_01_0001.arch.fz
 
     """
 
-    lid: LID = LID(lid)
+    s3_date_limit = os.getenv("S3_CSS_DATE_LIMIT", "00000000")
 
-    base_url: str = (
-        f"https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/{lid.collection}"
-    )
+    lid: LID = LID(lid)
     basename: str = lid.product_id.upper()[: lid.product_id.index(".")]
 
     telescope: str
@@ -69,14 +77,21 @@ def css_lid_to_url(lid: LID | str) -> str:
     except IndexError:
         raise ValueError(f"Invalid Catalina Sky Survey PDS4 logical identifier: {lid}.")
 
-    return f"{base_url}/{telescope}/{date[:4]}/{YYMonDD}/{basename}.arch.fz"
+    base_url: str
+    if date <= s3_date_limit:
+        base_url = "https://pds-css-archive.s3.us-west-2.amazonaws.com/sbn/gbo.ast.catalina.survey"
+    else:
+        base_url = "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey"
+
+    return f"{base_url}/{lid.collection}/{telescope}/{date[:4]}/{YYMonDD}/{basename}.arch.fz"
 
 
 def spacewatch_lid_to_url(lid: LID | str) -> str:
     """Spacewatch LID to URL.
 
     urn:nasa:pds:gbo.ast.spacewatch.survey:data:sw_0993_09.01_2003_03_23_09_18_47.001.fits
-    --> https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.spacewatch.survey/data/2003/03/23/sw_0993_09.01_2003_03_23_09_18_47.001.fits
+    --> https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.spacewatch.survey/data/2003/03/23/
+        sw_0993_09.01_2003_03_23_09_18_47.001.fits
 
     """
 
@@ -102,7 +117,7 @@ def neat_lid_to_url(lid: LID | str) -> str:
 
     lid: LID = LID(lid)
 
-    get_url: Dict[str, Callable] = {
+    get_url: dict[str, Callable] = {
         "data_geodss": neat_geodss_lid_to_url,
         "data_tricam": neat_tricam_lid_to_url,
     }
@@ -114,7 +129,8 @@ def neat_geodss_lid_to_url(lid: LID | str) -> str:
     """NEAT GEODSS LID to URL.
 
     urn:nasa:pds:gbo.ast.neat.survey:data_geodss:g19960417_obsdata_960417070119d
-    --> https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_geodss/g19960417/obsdata/960417070119d.fit.fz
+    --> https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_geodss/g19960417/obsdata/
+        960417070119d.fit.fz
 
     """
 
@@ -136,7 +152,8 @@ def neat_tricam_lid_to_url(lid: LID | str) -> str:
     """NEAT Tricam LID to URL.
 
     urn:nasa:pds:gbo.ast.neat.survey:data_tricam:p20011120_obsdata_20011120014036d
-    --> https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_tricam/p20011120/obsdata/20011120014036d.fit.fz
+    --> https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_tricam/p20011120/obsdata/
+        20011120014036d.fit.fz
 
     """
 

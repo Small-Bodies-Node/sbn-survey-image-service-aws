@@ -8,7 +8,7 @@ TEST_DEPENDENCIES := pytest
 include .env
 
 .PHONY: test deploy clean env
-default: sbn-sis.zip
+default: sbn-sis.zip sbn-sis-dependencies.zip
 
 # WARNING! You must run this on a linux!
 src/python:
@@ -38,7 +38,7 @@ deploy: .env sbn-sis.zip
 update-env-vars:
 	aws lambda update-function-configuration \
     --function-name ${LAMBDA_FUNCTION_NAME} \
-    --environment Variables="{S3_CACHE_BUCKET_NAME=${S3_CACHE_BUCKET_NAME}}"
+    --environment Variables="{S3_CACHE_BUCKET_NAME=${S3_CACHE_BUCKET_NAME},S3_CSS_DATE_LIMIT=${S3_CSS_DATE_LIMIT}}"
 
 deploy-dependencies: env sbn-sis-dependencies.zip
 	aws lambda publish-layer-version \

@@ -1,6 +1,8 @@
+import os
 import pytest
 import numpy as np
-from sbn_sis import lid_to_url, cutout_handler
+from lid_to_url import lid_to_url, css_lid_to_url
+from sbn_sis import cutout_handler
 
 
 @pytest.mark.parametrize(
@@ -47,7 +49,49 @@ def test_lid_to_url(lid, expected_url):
     assert url == expected_url
 
 
-def test_cutout_handler_css():
+@pytest.mark.parametrize(
+    "date, expected_url",
+    (
+        [
+            None,
+            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/data_calibrated/G96/2023/23May26/"
+            "G96_20230526_2B_FA44C2_01_0003.arch.fz",
+        ],
+        [
+            None,
+            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/data_calibrated/G96/2023/23May26/"
+            "G96_20230526_2B_FA44C2_01_0003.arch.fz",
+        ],
+        [
+            "20230525",
+            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/data_calibrated/G96/2023/23May26/"
+            "G96_20230526_2B_FA44C2_01_0003.arch.fz",
+        ],
+        [
+            "20230526",
+            "https://pds-css-archive.s3.us-west-2.amazonaws.com/sbn/gbo.ast.catalina.survey/data_calibrated/G96/2023/23May26/"
+            "G96_20230526_2B_FA44C2_01_0003.arch.fz",
+        ],
+    ),
+)
+def test_css_lid_to_url(date_limit, expected_url):
+    if date_limit is None and "S3_CSS_DATE_LIMIT" in os.environ:
+        del os.environ["S3_CSS_DATE_LIMIT"]
+    elif date_limit is not None:
+        os.environ.update({"S3_CSS_DATE_LIMIT": date_limit})
+
+    lid = "urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated:g96_20230526_2b_fa44c2_01_0003.arch"
+    url = css_lid_to_url(lid)
+    assert url == expected_url
+
+
+@pytest.mark.parametrize("date_limit", [None, "20230430"])
+def test_cutout_handler_css(date_limit):
+    if date_limit is None and "S3_CSS_DATE_LIMIT" in os.environ:
+        del os.environ["S3_CSS_DATE_LIMIT"]
+    elif date_limit is not None:
+        os.environ.update({"S3_CSS_DATE_LIMIT": date_limit})
+
     lid = "urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated:g96_20210402_2b_f5q9m2_01_0001.arch"
     hdu = cutout_handler(lid, 190.99166667, 23.92305556, "5 arcsec")
 
