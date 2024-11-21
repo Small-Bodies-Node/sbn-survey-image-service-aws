@@ -66,7 +66,12 @@ def lambda_handler(event: dict, context):
     set_image_to_s3_cache(buffer, caching_bucket, cached_filename, mime_type)
 
     return {
-        "headers": {"Content-Type": mime_type},
+        "headers": {
+            "Content-Type": mime_type,
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        },
         "statusCode": 200,
         "body": base64.b64encode(buffer.getvalue()).decode("utf-8"),
         "isBase64Encoded": True,
