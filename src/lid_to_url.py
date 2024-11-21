@@ -48,10 +48,10 @@ def lid_to_url(lid: LID | str) -> str:
 def css_lid_to_url(lid: LID | str) -> str:
     """Catalina Sky Survey LID to URL
 
-    S3 if S3_CSS_BUCKET_NAME is defined and date is <= S3_CSS_DATE_LIMIT:
+    Uses an S3 HTTPS endpoint if date is <= S3_CSS_DATE_LIMIT:
 
     urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated:g96_20210402_2b_f5q9m2_01_0001.arch
-    --> s3://pds-css-archive/sbn/gbo.ast.catalina.survey/data_calibrated/G96/2021/21Apr02/
+    --> https://pds-css-archive.s3.us-west-2.amazonaws.com/sbn/gbo.ast.catalina.survey/data_calibrated/G96/2021/21Apr02/
         G96_20210402_2B_F5Q9M2_01_0001.arch.fz
 
     HTTP at PSI otherwise:
@@ -62,7 +62,6 @@ def css_lid_to_url(lid: LID | str) -> str:
 
     """
 
-    css_bucket = os.getenv("S3_CSS_BUCKET_NAME", None)
     s3_date_limit = os.getenv("S3_CSS_DATE_LIMIT", "00000000")
 
     lid: LID = LID(lid)
@@ -78,8 +77,8 @@ def css_lid_to_url(lid: LID | str) -> str:
         raise ValueError(f"Invalid Catalina Sky Survey PDS4 logical identifier: {lid}.")
 
     base_url: str
-    if date <= s3_date_limit and css_bucket is not None:
-        base_url = "s3://pds-css-archive/sbn/gbo.ast.catalina.survey"
+    if date <= s3_date_limit:
+        base_url = "https://pds-css-archive.s3.us-west-2.amazonaws.com/sbn/gbo.ast.catalina.survey"
     else:
         base_url = "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey"
 
