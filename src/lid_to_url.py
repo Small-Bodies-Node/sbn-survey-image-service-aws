@@ -90,8 +90,18 @@ def spacewatch_lid_to_url(lid: LID | str) -> str:
     """Spacewatch LID to URL.
 
     urn:nasa:pds:gbo.ast.spacewatch.survey:data:sw_0993_09.01_2003_03_23_09_18_47.001.fits
-    --> https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.spacewatch.survey/data/2003/03/23/
+    -->
+    https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.spacewatch.survey/data/2003/03/23/
         sw_0993_09.01_2003_03_23_09_18_47.001.fits
+
+    This will only work if the product ID portion of the LID is case-matched to
+    the file name, e.g., do not use:
+
+    urn:nasa:pds:gbo.ast.spacewatch.survey:data:sw_0996_sw403s_2003_07_08_08_40_33.001.fits
+
+    but instead use:
+
+    urn:nasa:pds:gbo.ast.spacewatch.survey:data:sw_0996_SW403s_2003_07_08_08_40_33.001.fits
 
     """
 
@@ -105,7 +115,7 @@ def spacewatch_lid_to_url(lid: LID | str) -> str:
     month: str
     day: str
     try:
-        year, month, day = lid.product_id.split("_")[3:6]
+        year, month, day = lid.product_id.split("_")[-6:-3]
     except IndexError:
         raise ValueError(f"Invalid Spacewatch PDS4 logical identifier: {lid}")
 
