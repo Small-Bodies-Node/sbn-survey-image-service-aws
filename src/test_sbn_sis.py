@@ -60,23 +60,23 @@ def test_lid_to_url(lid, expected_url):
     (
         [
             None,
-            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/data_calibrated/G96/2023/23May26/"
-            "G96_20230526_2B_FA44C2_01_0003.arch.fz",
+            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/data_calibrated/G96/2023/"
+            "23May26/G96_20230526_2B_FA44C2_01_0003.arch.fz",
         ],
         [
             None,
-            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/data_calibrated/G96/2023/23May26/"
-            "G96_20230526_2B_FA44C2_01_0003.arch.fz",
+            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/data_calibrated/G96/2023/"
+            "23May26/G96_20230526_2B_FA44C2_01_0003.arch.fz",
         ],
         [
             "20230525",
-            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/data_calibrated/G96/2023/23May26/"
-            "G96_20230526_2B_FA44C2_01_0003.arch.fz",
+            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/data_calibrated/G96/2023/"
+            "23May26/G96_20230526_2B_FA44C2_01_0003.arch.fz",
         ],
         [
             "20230526",
-            "https://pds-css-archive.s3.us-west-2.amazonaws.com/sbn/gbo.ast.catalina.survey/data_calibrated/G96/2023/23May26/"
-            "G96_20230526_2B_FA44C2_01_0003.arch.fz",
+            "https://pds-css-archive.s3.us-west-2.amazonaws.com/sbn/gbo.ast.catalina.survey/data_calibrated/G96/2023/"
+            "23May26/G96_20230526_2B_FA44C2_01_0003.arch.fz",
         ],
     ),
 )
@@ -87,6 +87,23 @@ def test_css_lid_to_url(date_limit, expected_url):
         os.environ.update({"S3_CSS_DATE_LIMIT": date_limit})
 
     lid = "urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated:g96_20230526_2b_fa44c2_01_0003.arch"
+    url = css_lid_to_url(lid)
+    assert url == expected_url
+
+
+def test_css_lid_to_url_psi_fallback():
+    # this one would be an S3 file, but the LID is mangled to make sure it does
+    # not exist, so PSI is used as the fallback
+    lid = (
+        "urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated:"
+        "g96_20230526_2b_fa44c2_01_test.arch"
+    )
+    date_limit = "20230526"
+    expected_url = (
+        "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/data_calibrated/G96/2023/"
+        "23May26/G96_20230526_2B_FA44C2_01_TEST.arch.fz"
+    )
+    os.environ.update({"S3_CSS_DATE_LIMIT": date_limit})
     url = css_lid_to_url(lid)
     assert url == expected_url
 

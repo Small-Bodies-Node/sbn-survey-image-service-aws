@@ -1,5 +1,6 @@
 import os
 from typing import Callable
+import requests
 from lid import LID
 
 mm_to_Mon: dict[str, str] = {
@@ -61,9 +62,17 @@ def css_lid_to_url(lid: LID | str) -> str:
     --> https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/data_calibrated/G96/2021/21Apr02/
         G96_20210402_2B_F5Q9M2_01_0001.arch.fz
 
+    The S3 file is tested for existence.  If not, PSI is used instead.
+
     """
 
-    s3_date_limit = os.getenv("S3_CSS_DATE_LIMIT", "00000000")
+    s3_date_limit: str = os.getenv("S3_CSS_DATE_LIMIT", "00000000")
+    aws_base_url: str = (
+        "https://pds-css-archive.s3.us-west-2.amazonaws.com/sbn/gbo.ast.catalina.survey"
+    )
+    psi_base_url: str = (
+        "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey"
+    )
 
     lid: LID = LID(lid)
     basename: str = lid.product_id.upper()[: lid.product_id.index(".")]
@@ -77,13 +86,16 @@ def css_lid_to_url(lid: LID | str) -> str:
     except IndexError:
         raise ValueError(f"Invalid Catalina Sky Survey PDS4 logical identifier: {lid}.")
 
-    base_url: str
-    if date <= s3_date_limit:
-        base_url = "https://pds-css-archive.s3.us-west-2.amazonaws.com/sbn/gbo.ast.catalina.survey"
-    else:
-        base_url = "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey"
+    path: str = f"{lid.collection}/{telescope}/{date[:4]}/{YYMonDD}/{basename}.arch.fz"
 
-    return f"{base_url}/{lid.collection}/{telescope}/{date[:4]}/{YYMonDD}/{basename}.arch.fz"
+    if date <= s3_date_limit:
+        # at this moment, some files are missing from S3, if an HTTP request fails, use PSI
+        url: str = "/".join((aws_base_url, path))
+        response = requests.head(url)
+        if response.status_code == 200:
+            return url
+
+    return "/".join((psi_base_url, path))
 
 
 def spacewatch_lid_to_url(lid: LID | str) -> str:
