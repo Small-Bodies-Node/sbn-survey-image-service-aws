@@ -37,10 +37,16 @@ def lambda_handler(event: dict, context):
             "statusCode": 500,
             "body": "S3_CACHE_BUCKET_NAME environment variable not set",
         }
-    cached_file_buffer = get_image_from_s3_cache(caching_bucket, cached_filename)
+    cached_file_buffer = get_image_from_s3_cache(
+        caching_bucket, cached_filename)
     if cached_file_buffer:
         return {
-            "headers": {"Content-Type": f"image/{image_format.value}"},
+            "headers": {
+                "Content-Type": f"image/{image_format.value}",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            },
             "statusCode": 200,
             "body": base64.b64encode(cached_file_buffer.getvalue()).decode("utf-8"),
             "isBase64Encoded": True,
