@@ -91,4 +91,4 @@ def fits_to_image(hdu: fits.HDUList) -> Image:
     """Convert FITS data to PIL Image."""
     interval: ZScaleInterval = ZScaleInterval()
     scaled_data: np.ndarray = interval(hdu[0].data, clip=True) * 255
-    return Image.fromarray(scaled_data.astype(np.uint8))
+    return Image.fromarray(scaled_data.astype(np.uint8)[::-1])
