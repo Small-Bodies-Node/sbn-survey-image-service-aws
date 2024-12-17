@@ -172,3 +172,37 @@ def test_cutout_handler_loneos():
 
     assert np.isclose(hdu[0].header["CRPIX1"], 435.5)
     assert np.isclose(hdu[0].header["CRPIX2"], -240.5)
+
+
+def test_cutout_handler_loneos():
+    lid = "urn:nasa:pds:gbo.ast.loneos.survey:data_augmented:051113_1a_011_fits"
+    hdu = cutout_handler(lid, 320.8154669, 9.1222266, "8 arcsec")
+
+    assert np.all(
+        hdu[0].data
+        == np.array(
+            [
+                [24201, 26761, 21229],
+                [26799, 32070, 26410],
+                [19010, 21363, 18396],
+            ],
+            dtype=np.uint16,
+        )
+    )
+
+    assert np.isclose(hdu[0].header["CRPIX1"], 435.5)
+    assert np.isclose(hdu[0].header["CRPIX2"], -240.5)
+
+
+def test_cutout_handler_no_overlap():
+    lid = "urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated:v06_20210709_4a_ut8vc2_01_0001.arch"
+    hdu = cutout_handler(lid, 322.49304166666667, 12.167, "5 arcmin")
+
+    assert len(hdu[0].data) == 1
+    assert np.isnan(hdu[0].data[0])
+
+    assert np.isclose(hdu[0].header["CRPIX1"], -466.77343268)
+    assert np.isclose(hdu[0].header["CRPIX2"], -1240.93129337)
+
+    assert np.isclose(hdu[0].header["CRVAL1"], 322.49304166666667)
+    assert np.isclose(hdu[0].header["CRVAL2"], 12.167)

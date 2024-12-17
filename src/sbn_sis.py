@@ -4,7 +4,7 @@ from PIL import Image
 import numpy as np
 import astropy.units as u
 from astropy.io import fits
-from astropy.nddata import Cutout2D
+from astropy.nddata import Cutout2D, NoOverlapError
 from astropy.coordinates import SkyCoord
 from astropy.wcs import WCS, FITSFixedWarning
 from astropy.visualization import ZScaleInterval
@@ -76,10 +76,18 @@ def cutout_handler(lid: str, ra: float, dec: float, size: str) -> fits.HDUList:
             )
             wcs: WCS = WCS(header)
 
-        cutout: Cutout2D = Cutout2D(data[i].section, position, _size, wcs=wcs)
-        cutout_image: np.ndarray = cutout.data
-
-        header.update(cutout.wcs.to_header())
+        cutout_image: np.ndarray
+        try:
+            cutout: Cutout2D = Cutout2D(data[i].section, position, _size, wcs=wcs)
+            cutout_image = cutout.data
+            header.update(cutout.wcs.to_header())
+        except NoOverlapError:
+            pix = wcs.world_to_pixel(position)
+            header["CRPIX1"] = float(pix[0])
+            header["CRPIX2"] = float(pix[1])
+            header["CRVAL1"] = position.ra.deg
+            header["CRVAL2"] = position.dec.deg
+            cutout_image = np.array([[np.nan]])
 
     result: fits.HDUList = fits.HDUList()
     result.append(fits.PrimaryHDU(cutout_image, header))
