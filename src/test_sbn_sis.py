@@ -2,7 +2,7 @@ import os
 import pytest
 import numpy as np
 from lid_to_url import lid_to_url, css_lid_to_url
-from sbn_sis import cutout_handler
+from sbn_sis import cutout_handler, fits_to_image
 
 
 @pytest.mark.parametrize(
@@ -206,3 +206,6 @@ def test_cutout_handler_no_overlap():
 
     assert np.isclose(hdu[0].header["CRVAL1"], 322.49304166666667)
     assert np.isclose(hdu[0].header["CRVAL2"], 12.167)
+
+    # should not raise an exception
+    im = fits_to_image(hdu)

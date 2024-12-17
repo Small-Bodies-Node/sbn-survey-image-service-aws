@@ -97,6 +97,12 @@ def cutout_handler(lid: str, ra: float, dec: float, size: str) -> fits.HDUList:
 
 def fits_to_image(hdu: fits.HDUList) -> Image:
     """Convert FITS data to PIL Image."""
-    interval: ZScaleInterval = ZScaleInterval()
-    scaled_data: np.ndarray = interval(hdu[0].data, clip=True) * 255
+
+    scaled_data: np.ndarray
+    if all(np.isnan(hdu[0].data.ravel())):
+        scaled_data = np.zeros(hdu[0].data.shape, np.uint8)
+    else:
+        interval: ZScaleInterval = ZScaleInterval()
+        scaled_data = interval(hdu[0].data, clip=True) * 255
+
     return Image.fromarray(scaled_data.astype(np.uint8)[::-1])
