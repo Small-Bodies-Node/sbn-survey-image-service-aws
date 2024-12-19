@@ -37,8 +37,7 @@ def lambda_handler(event: dict, context):
             "statusCode": 500,
             "body": "S3_CACHE_BUCKET_NAME environment variable not set",
         }
-    cached_file_buffer = get_image_from_s3_cache(
-        caching_bucket, cached_filename)
+    cached_file_buffer = get_image_from_s3_cache(caching_bucket, cached_filename)
     if cached_file_buffer:
         return {
             "headers": {
@@ -65,7 +64,7 @@ def lambda_handler(event: dict, context):
         hdu.writeto(buffer, output_verify="ignore")
     else:
         image: Image = fits_to_image(hdu)
-        image.save(buffer, format=image_format.value)
+        image.save(buffer, format=image_format.value, quality=95)
 
     mime_type = f"image/{image_format.value}"
 
