@@ -32,11 +32,29 @@ Create .env from env.template
 
 ### Deploying a new version
 
-Requires: setuptools_scm (`pip install setuptools_scm`)
+The User-Agent is set with the code's version.  The version is generated from the state of the code with respect to the last version tag in git, using setuptools_scm (`pip install setuptools_scm`).
 
-1. Set version with git, as needed: `git tag vX.Y.Z`
-2. Push tag to github: `git push --tags`
-3. 
+1. For production, get a clean version:
+  a. Set version with git: `git tag vX.Y.Z`
+  b. Or, checkout a clean version: `git checkout v1.0.1`
+2. `make deploy`
+
+To update the github repository with the deployed version:
+1. `git push`
+2. `git push --tags`
+
+To verify that the version is correctly set, test the function on the AWS console.  The result should include the version in the header under "User-Agent":
+
+```json
+{
+  "headers": {
+    "Content-Type": "image/fits",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "User-Agent": "SBN Survey Image Service AWS 1.0.1"
+  }
+}
 
 ### Testing
 
