@@ -8,6 +8,7 @@ from sbn_sis import cutout_handler, fits_to_image
 from get_file_name import get_file_name
 from set_image_to_s3_cache import set_image_to_s3_cache
 from get_image_from_s3_cache import get_image_from_s3_cache
+from _version import __version__
 
 
 class ImageFormat(Enum):
@@ -74,6 +75,7 @@ def lambda_handler(event: dict, context):
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            "User-Agent": f"SBN Survey Image Service AWS {__version__}",
         },
         "statusCode": 200,
         "body": content_body,

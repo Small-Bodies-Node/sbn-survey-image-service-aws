@@ -4,6 +4,7 @@
 activate
 *.zip
 src/python
+src/_version.py
 *~
 .env
 test-venv

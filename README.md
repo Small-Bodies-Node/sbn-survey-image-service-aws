@@ -24,6 +24,8 @@ The AWS Lambda function:
 
 Catalina Sky Survey, NEAT, and Spacewatch data archived at `sbnarchive.psi.edu` are presently supported.
 
+Requests from this service will have a User-Agent of "SBN Survey Image Service AWS {version}"
+
 ## Development notes
 
 ### Testing

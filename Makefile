@@ -15,6 +15,9 @@ src/python:
 	${PYTHON} -m venv --prompt=sbn-sis-lambda src/python
 	. src/python/bin/activate && pip install ${DEPENDENCIES}
 
+src/_version.py:
+	python3 -m setuptools_scm -f json --force-write-version-files
+
 test-venv:
 	${PYTHON} -m venv --prompt=sbn-sis-lambda-testing test-venv
 	. test-venv/bin/activate && pip install ${DEPENDENCIES} ${TEST_DEPENDENCIES}
