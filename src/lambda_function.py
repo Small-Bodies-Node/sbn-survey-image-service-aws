@@ -20,7 +20,7 @@ class ImageFormat(Enum):
 
 def lambda_handler(event: dict, context):
     try:
-        image_format: ImageFormat = ImageFormat(
+        image_format = ImageFormat(
             event["queryStringParameters"].get("format", "fits").lower()
         )
     except ValueError:
@@ -52,7 +52,7 @@ def lambda_handler(event: dict, context):
         }
 
     # No cached-file found, so fetch from the cutout service
-    hdu: fits.HDUList = cutout_handler(
+    hdu = cutout_handler(
         event["pathParameters"]["lid"],
         float(event["queryStringParameters"]["ra"]),
         float(event["queryStringParameters"]["dec"]),
@@ -63,7 +63,7 @@ def lambda_handler(event: dict, context):
     if image_format == ImageFormat.FITS:
         hdu.writeto(buffer, output_verify="ignore")
     else:
-        image: Image = fits_to_image(hdu)
+        image = fits_to_image(hdu)
         image.save(buffer, format=image_format.value, quality=95)
 
     mime_type = f"image/{image_format.value}"

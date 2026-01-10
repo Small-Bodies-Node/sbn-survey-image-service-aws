@@ -3,7 +3,7 @@ from typing import Callable
 import requests
 from lid import LID
 
-mm_to_Mon: dict[str, str] = {
+mm_to_Mon = {
     "01": "Jan",
     "02": "Feb",
     "03": "Mar",
@@ -35,9 +35,9 @@ def lid_to_url(lid: LID | str) -> str:
 
     """
 
-    lid: LID = LID(lid)
+    lid = LID(lid)
 
-    get_url: dict[str, Callable] = {
+    get_url = {
         "gbo.ast.catalina.survey": css_lid_to_url,
         "gbo.ast.spacewatch.survey": spacewatch_lid_to_url,
         "gbo.ast.neat.survey": neat_lid_to_url,
@@ -66,31 +66,26 @@ def css_lid_to_url(lid: LID | str) -> str:
 
     """
 
-    s3_date_limit: str = os.getenv("S3_CSS_DATE_LIMIT", "00000000")
-    aws_base_url: str = (
+    s3_date_limit = os.getenv("S3_CSS_DATE_LIMIT", "00000000")
+    aws_base_url = (
         "https://pds-css-archive.s3.us-west-2.amazonaws.com/sbn/gbo.ast.catalina.survey"
     )
-    psi_base_url: str = (
-        "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey"
-    )
+    psi_base_url = "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey"
 
     lid: LID = LID(lid)
-    basename: str = lid.product_id.upper()[: lid.product_id.index(".")]
+    basename = lid.product_id.upper()[: lid.product_id.index(".")]
 
-    telescope: str
-    date: str
-    YYMonDD: str
     try:
         telescope, date = basename.split("_")[:2]
         YYMonDD = f"{date[2:4]}{mm_to_Mon[date[4:6]]}{date[6:8]}"
     except IndexError:
         raise ValueError(f"Invalid Catalina Sky Survey PDS4 logical identifier: {lid}.")
 
-    path: str = f"{lid.collection}/{telescope}/{date[:4]}/{YYMonDD}/{basename}.arch.fz"
+    path = f"{lid.collection}/{telescope}/{date[:4]}/{YYMonDD}/{basename}.arch.fz"
 
     if date <= s3_date_limit:
         # at this moment, some files are missing from S3, if an HTTP request fails, use PSI
-        url: str = "/".join((aws_base_url, path))
+        url = "/".join((aws_base_url, path))
         response = requests.head(url)
         if response.status_code == 200:
             return url
@@ -117,15 +112,10 @@ def spacewatch_lid_to_url(lid: LID | str) -> str:
 
     """
 
-    lid: LID = LID(lid)
+    lid = LID(lid)
 
-    base_url: str = (
-        "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.spacewatch.survey/data"
-    )
+    base_url = "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.spacewatch.survey/data"
 
-    year: str
-    month: str
-    day: str
     try:
         year, month, day = lid.product_id.split("_")[-6:-3]
     except IndexError:
@@ -137,9 +127,9 @@ def spacewatch_lid_to_url(lid: LID | str) -> str:
 def neat_lid_to_url(lid: LID | str) -> str:
     """NEAT LID to URL."""
 
-    lid: LID = LID(lid)
+    lid = LID(lid)
 
-    get_url: dict[str, Callable] = {
+    get_url = {
         "data_geodss": neat_geodss_lid_to_url,
         "data_tricam": neat_tricam_lid_to_url,
     }
@@ -156,14 +146,10 @@ def neat_geodss_lid_to_url(lid: LID | str) -> str:
 
     """
 
-    lid: LID = LID(lid)
+    lid = LID(lid)
 
-    base_url: str = (
-        "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_geodss"
-    )
+    base_url = "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_geodss"
 
-    basename: str
-    directory: str
     directory, basename = lid.product_id.rsplit("_", 1)
     directory = directory.replace("_", "/")
 
@@ -179,14 +165,10 @@ def neat_tricam_lid_to_url(lid: LID | str) -> str:
 
     """
 
-    lid: LID = LID(lid)
+    lid = LID(lid)
 
-    base_url: str = (
-        "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_tricam"
-    )
+    base_url = "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.neat.survey/data_tricam"
 
-    basename: str
-    directory: str
     directory, basename = lid.product_id.rsplit("_", 1)
     directory = directory.replace("_", "/")
 
@@ -210,18 +192,17 @@ def loneos_lid_to_url(lid: LID | str) -> str:
 
     """
 
-    lid: LID = LID(lid)
+    lid = LID(lid)
 
-    fn: str = lid.product_id[:-5] + ".fits"
-    date: str = lid.product_id[:6]
+    fn = lid.product_id[:-5] + ".fits"
+    date = lid.product_id[:6]
 
-    lois: str
     if date < "050101":
         lois = "lois_3_2_0_beta"
     else:
         lois = "lois_4_2_0"
 
-    base_url: str = (
+    base_url = (
         "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.loneos.survey/data_augmented"
     )
 

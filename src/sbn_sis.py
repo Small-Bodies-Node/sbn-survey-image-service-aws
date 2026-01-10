@@ -37,12 +37,12 @@ def cutout_handler(lid: str, ra: float, dec: float, size: str) -> fits.HDUList:
 
     """
 
-    lid: LID = LID(lid)
+    lid = LID(lid)
 
-    position: SkyCoord = SkyCoord(ra, dec, unit=(u.deg, u.deg))
-    _size: u.Quantity = np.maximum(u.Quantity(size), 1 * u.arcsec)
+    position = SkyCoord(ra, dec, unit=(u.deg, u.deg))
+    _size = np.maximum(u.Quantity(size), 1 * u.arcsec)
 
-    url: str = lid_to_url(lid)
+    url = lid_to_url(lid)
 
     fsspec_kwargs = {}
     if url.startswith("s3"):
@@ -51,7 +51,6 @@ def cutout_handler(lid: str, ra: float, dec: float, size: str) -> fits.HDUList:
         # for http or even local files:
         fsspec_kwargs.update({"block_size": 1024 * 512, "cache_type": "bytes"})
 
-    data: fits.HDUList
     with fits.open(
         url,
         cache=False,
@@ -59,11 +58,11 @@ def cutout_handler(lid: str, ra: float, dec: float, size: str) -> fits.HDUList:
         lazy_load_hdus=True,
         fsspec_kwargs=fsspec_kwargs,
     ) as data:
-        i: int = 0
+        i = 0
         if lid.bundle == "gbo.ast.catalina.survey":
             i = 1
 
-        header: fits.Header = copy(data[i].header)
+        header = copy(data[i].header)
 
         # use distortions in CSS and SW data
         if lid.bundle in ["gbo.ast.catalina.survey", "gbo.ast.spacewatch.survey"]:
@@ -74,11 +73,10 @@ def cutout_handler(lid: str, ra: float, dec: float, size: str) -> fits.HDUList:
             warnings.simplefilter(
                 "ignore", (fits.verify.VerifyWarning, FITSFixedWarning)
             )
-            wcs: WCS = WCS(header)
+            wcs = WCS(header)
 
-        cutout_image: np.ndarray
         try:
-            cutout: Cutout2D = Cutout2D(data[i].section, position, _size, wcs=wcs)
+            cutout = Cutout2D(data[i].section, position, _size, wcs=wcs)
             cutout_image = cutout.data
             header.update(cutout.wcs.to_header())
         except NoOverlapError:
@@ -89,7 +87,7 @@ def cutout_handler(lid: str, ra: float, dec: float, size: str) -> fits.HDUList:
             header["CRVAL2"] = position.dec.deg
             cutout_image = np.array([[np.nan]])
 
-    result: fits.HDUList = fits.HDUList()
+    result = fits.HDUList()
     result.append(fits.PrimaryHDU(cutout_image, header))
 
     return result
@@ -98,11 +96,10 @@ def cutout_handler(lid: str, ra: float, dec: float, size: str) -> fits.HDUList:
 def fits_to_image(hdu: fits.HDUList) -> Image:
     """Convert FITS data to PIL Image."""
 
-    scaled_data: np.ndarray
     if all(np.isnan(hdu[0].data.ravel())):
         scaled_data = np.zeros(hdu[0].data.shape, np.uint8) + 255
     else:
-        interval: ZScaleInterval = ZScaleInterval()
+        interval = ZScaleInterval()
         scaled_data = interval(hdu[0].data, clip=True) * 255
 
     return Image.fromarray(scaled_data.astype(np.uint8)[::-1])
