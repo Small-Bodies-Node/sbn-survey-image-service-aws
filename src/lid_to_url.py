@@ -1,5 +1,4 @@
 import os
-from typing import Callable
 import requests
 from lid import LID
 
@@ -64,6 +63,12 @@ def css_lid_to_url(lid: LID | str) -> str:
 
     The S3 file is tested for existence.  If not, PSI is used instead.
 
+    CSS has two product ID formats:
+
+    (1) g96_20210402_2b_f5q9m2_01_0001.arch
+
+    (2) g96.25sep30.g96_20250930_2b_n47112_01_0001.arch
+
     """
 
     s3_date_limit = os.getenv("S3_CSS_DATE_LIMIT", "00000000")
@@ -72,16 +77,36 @@ def css_lid_to_url(lid: LID | str) -> str:
     )
     psi_base_url = "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey"
 
-    lid: LID = LID(lid)
-    basename = lid.product_id.upper()[: lid.product_id.index(".")]
+    lid = LID(lid)
 
-    try:
-        telescope, date = basename.split("_")[:2]
-        YYMonDD = f"{date[2:4]}{mm_to_Mon[date[4:6]]}{date[6:8]}"
-    except IndexError:
-        raise ValueError(f"Invalid Catalina Sky Survey PDS4 logical identifier: {lid}.")
+    # From the LID, get the telescope, year, date as YYMonDD and YYYYMMDD, and
+    # file base name
+    if lid.product_id.count(".") == 1:
+        # format (1) g96_20210402_2b_f5q9m2_01_0001.arch
+        basename = lid.product_id.upper()[: lid.product_id.index(".")]
 
-    path = f"{lid.collection}/{telescope}/{date[:4]}/{YYMonDD}/{basename}.arch.fz"
+        try:
+            telescope, date = basename.split("_")[:2]
+            year = date[:4]
+            YYMonDD = f"{date[2:4]}{mm_to_Mon[date[4:6]]}{date[6:8]}"
+        except IndexError:
+            raise ValueError(
+                f"Invalid Catalina Sky Survey PDS4 logical identifier: {lid}."
+            )
+    elif lid.product_id.count(".") == 3:
+        # format (2) g96.25sep30.g96_20250930_2b_n47112_01_0001.arch
+        telescope, YYMonDD, basename, _ = lid.product_id.upper().split(".")
+
+        YYMonDD = YYMonDD[:3] + YYMonDD[3:5].lower() + YYMonDD[5:]
+        try:
+            date = basename.split("_")[1]
+            year = date[:4]
+        except IndexError:
+            raise ValueError(
+                f"Invalid Catalina Sky Survey PDS4 logical identifier: {lid}."
+            )
+
+    path = f"{lid.collection}/{telescope}/{year}/{YYMonDD}/{basename}.arch.fz"
 
     if date <= s3_date_limit:
         # at this moment, some files are missing from S3, if an HTTP request fails, use PSI

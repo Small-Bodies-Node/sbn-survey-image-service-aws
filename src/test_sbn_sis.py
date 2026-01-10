@@ -15,6 +15,12 @@ from sbn_sis import cutout_handler, fits_to_image
             "data_calibrated/G96/2021/21Apr02/G96_20210402_2B_F5Q9M2_01_0001.arch.fz",
         ),
         (
+            "urn:nasa:pds:gbo.ast.catalina.survey:data_calibrated:"
+            "g96.25sep30.g96_20250930_2b_n47112_01_0001.arch",
+            "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.catalina.survey/"
+            "data_calibrated/G96/2025/25Sep30/G96_20250930_2B_N47112_01_0001.arch.fz",
+        ),
+        (
             "urn:nasa:pds:gbo.ast.spacewatch.survey:data:"
             "sw_0993_09.01_2003_03_23_09_18_47.001.fits",
             "https://sbnarchive.psi.edu/pds4/surveys/gbo.ast.spacewatch.survey/"
