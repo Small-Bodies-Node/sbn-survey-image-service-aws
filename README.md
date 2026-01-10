@@ -55,6 +55,7 @@ To verify that the version is correctly set, test the function on the AWS consol
     "User-Agent": "SBN Survey Image Service AWS 1.0.1"
   }
 }
+```
 
 ### Testing
 
