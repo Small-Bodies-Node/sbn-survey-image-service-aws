@@ -28,6 +28,16 @@ Requests from this service will have a User-Agent of "SBN Survey Image Service A
 
 ## Development notes
 
+Create .env from env.template
+
+### Deploying a new version
+
+Requires: setuptools_scm (`pip install setuptools_scm`)
+
+1. Set version with git, as needed: `git tag vX.Y.Z`
+2. Push tag to github: `git push --tags`
+3. 
+
 ### Testing
 
 Unit tests are in the src/test_sbn_sis.py file.  They are designed to be run with `pytest src/`.  The tests can also be run with the Makefile, which will setup a virtual environment in the `test-venv` directory:

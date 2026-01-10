@@ -8,6 +8,7 @@ TEST_DEPENDENCIES := pytest
 include .env
 
 .PHONY: test deploy clean env
+FORCE:
 default: sbn-sis.zip sbn-sis-dependencies.zip
 
 # WARNING! You must run this on a linux!
@@ -15,14 +16,14 @@ src/python:
 	${PYTHON} -m venv --prompt=sbn-sis-lambda src/python
 	. src/python/bin/activate && pip install ${DEPENDENCIES}
 
-src/_version.py:
+src/_version.py: FORCE
 	python3 -m setuptools_scm -f json --force-write-version-files
 
 test-venv:
 	${PYTHON} -m venv --prompt=sbn-sis-lambda-testing test-venv
 	. test-venv/bin/activate && pip install ${DEPENDENCIES} ${TEST_DEPENDENCIES}
 
-sbn-sis-dependencies.zip: src/python
+sbn-sis-dependencies.zip: src/python src/_version.py
 	rm -f $@
 	cd src && zip -r ../$@ python/lib/${PYTHON}/site-packages --exclude python/lib/${PYTHON}/site-packages/pip\* --exclude python/lib/${PYTHON}/site-packages/setuptools\*
 
