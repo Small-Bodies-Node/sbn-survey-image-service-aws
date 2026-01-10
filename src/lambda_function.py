@@ -3,8 +3,6 @@ import io
 import base64
 from enum import Enum
 
-from PIL import Image
-from astropy.io import fits
 from sbn_sis import cutout_handler, fits_to_image
 
 from get_file_name import get_file_name
