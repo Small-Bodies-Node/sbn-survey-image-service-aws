@@ -111,9 +111,12 @@ def css_lid_to_url(lid: LID | str) -> str:
     if date <= s3_date_limit:
         # at this moment, some files are missing from S3, if an HTTP request fails, use PSI
         url = "/".join((aws_base_url, path))
-        response = requests.head(url)
-        if response.status_code == 200:
-            return url
+        try:
+            response = requests.head(url, timeout=3)
+            if response.status_code == 200:
+                return url
+        except requests.exceptions.RequestException:
+            pass
 
     return "/".join((psi_base_url, path))
 
