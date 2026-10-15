@@ -1,0 +1,8 @@
+.env*
+.venv*
+.build-venv
+test-venv
+src/python
+src/_version.py
+*.zip
+**/__pycache__
