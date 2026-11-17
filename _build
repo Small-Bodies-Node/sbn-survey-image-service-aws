@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 1 ]]; then
+    echo "Usage: ./_build {x86_64|arm64} (the Lambda function's architecture)" >&2
+    exit 2
+fi
+
+case "$1" in
+    x86_64) platform=linux/amd64 ;;
+    arm64) platform=linux/arm64 ;;
+    *) echo "Choose the Lambda architecture: x86_64 or arm64." >&2; exit 2 ;;
+esac
+
+if ! command -v docker >/dev/null 2>&1; then
+    echo "Install Docker and start Docker Desktop or Colima first." >&2
+    exit 1
+fi
+
+repository="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+docker build --platform "$platform" --target artifacts --output "$repository" "$repository"
+echo "Built sbn-sis.zip and sbn-sis-dependencies.zip for $1."

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 0 ]]; then
+    echo "Usage: ./_deploy_stage (deploys the stage function only)" >&2
+    exit 2
+fi
+
+repository="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
+# Use this repository's credentials, independent of AWS profile files.
+unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_SECURITY_TOKEN
+unset AWS_PROFILE AWS_DEFAULT_PROFILE
+set -a
+if ! source "$repository/.env" >/dev/null 2>&1; then
+    echo "Could not source this repository's .env file." >&2
+    exit 1
+fi
+set +a
+unset AWS_PROFILE AWS_DEFAULT_PROFILE
+export AWS_CONFIG_FILE=/dev/null AWS_SHARED_CREDENTIALS_FILE=/dev/null
+if [[ -z "${AWS_ACCESS_KEY_ID:-}" || -z "${AWS_SECRET_ACCESS_KEY:-}" ]]; then
+    echo ".env must provide AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY." >&2
+    exit 1
+fi
+exec python3 "$repository/src/deploy_stage.py"

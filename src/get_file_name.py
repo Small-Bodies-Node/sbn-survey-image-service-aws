@@ -1,10 +1,24 @@
 import re
+from hashlib import sha256
+from urllib.parse import urlencode
+
+from uses_north_up_renderer import NORTH_UP_RENDERER_VERSION, uses_north_up_renderer
 
 
 def get_file_name(event: dict) -> str:
     """
     Take lambda event extract the file name from the URL.
     """
+
+    # Opted-in previews bypass old browse objects; legacy URLs keep their keys.
+    parameters = event.get("queryStringParameters") or {}
+    image_format = str(parameters.get("format", "fits")).lower()
+    if uses_north_up_renderer(parameters):
+        query = urlencode(sorted(parameters.items()))
+        identity = f"{NORTH_UP_RENDERER_VERSION}:{event.get('path', '')}?{query}"
+        extension = "jpeg" if image_format == "jpg" else image_format
+        digest = sha256(identity.encode()).hexdigest()
+        return f"{NORTH_UP_RENDERER_VERSION}-{digest}.{extension}"
 
     # Get the HTTP path
     path = event.get("path")
